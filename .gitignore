@@ -102,3 +102,16 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+
+# Intellij
+./idea/*
+./idea
+.idea
+
+# Mac
+.DS_Store
+
+# Data
+images
+data
+

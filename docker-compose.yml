@@ -1,0 +1,39 @@
+version: "3.2"
+
+networks:
+  proxy:
+    driver: bridge
+
+services:
+  traefik:
+    image: traefik:1.6
+    #command: --web --logLevel=DEBUG --web.metrics.prometheus --web.metrics.prometheus.buckets="0.1,0.3,1.2,5.0"
+    ports:
+      - "80:80"
+      - "8080:8080"
+      - "443:443"
+    networks:
+      - proxy
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./traefik.toml:/traefik.toml
+      #- ./usersFile:/usersFile
+      - ./acme.json:/acme.json
+    environment:
+      AWS_REGION: eu-central-1
+      AWS_HOSTED_ZONE_ID: 
+    labels:
+      traefik.enable: "false"
+
+  spaceinvaders:
+    image: tikalk/si-model-trainer:latest
+    #ports:
+    #  - "5000:5000"
+    networks:
+      - proxy
+    labels:
+      traefik.enable: "true"
+      traefik.port: 5000
+      traefik.frontend.passHostHeader: "true"
+      traefik.frontend.rule: "Host:si.hub.tikal.io"
+

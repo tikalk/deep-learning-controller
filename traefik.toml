@@ -1,0 +1,52 @@
+debug = true
+#debug = false
+checkNewVersion = true
+
+# defaultEntryPoints must be at the top 
+# because it should not be in any table below
+
+defaultEntryPoints = ["http", "https", "ws", "wss"]
+
+# Enable retry sending request if network error
+[retry]
+
+# Entrypoints, http and https
+[entryPoints]
+
+# http should be redirected to https
+  [entryPoints.http]
+  address = ":80"
+    [entryPoints.http.redirect]
+    entryPoint = "https"
+
+# https is the default
+  [entryPoints.https]
+  address = ":443"
+
+
+    [entryPoints.https.tls]
+
+# Enable ACME (Let's Encrypt): automatic SSL
+[acme]
+email = "webmaster@lightapp.com"
+storage = "/acme.json"
+entryPoint = "https"
+onDemand = false
+OnHostRule = true
+
+[acme.httpChallenge]
+entryPoint = "http"
+
+# Activate API and Dashboard
+[api]
+# entryPoint = "bar"
+  dashboard = true
+#[web.auth.basic]
+#usersFile = "/usersFile"
+#address = "0.0.0.0:9090"
+
+[docker]
+endpoint = "unix:///var/run/docker.sock"
+domain = "hub.tikal.io"
+watch = true
+exposedbydefault = false

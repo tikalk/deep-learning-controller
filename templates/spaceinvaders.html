@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Space Invaders</title>
+    <link rel="shortcut icon" href="/favicon.ico">
+    <link rel="stylesheet" href="{{ url_for('static', filename='spaceinvaders/css/core.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='spaceinvaders/css/typeography.css') }}">
+    <link rel="stylesheet" href="/static/spaceinvaders/css/cam-styles.css">
+    <style>
+        #paramsForm {
+            color: white;
+        }
+
+        #paramsForm label {
+            display: block;
+        }
+
+        #paramsForm select {
+            width: 100%;
+        }
+
+        #probabilityMonitor {
+            color: white;
+            font-size: 2rem;
+        }
+
+        html, body {
+            overflow: hidden;
+            width: 850px;
+            height: 100vh;
+            margin: 0 auto;
+        }
+
+        #muteLink {
+            display: block;
+            width: 100%;
+            text-align: center;
+            font-size: 1.2rem;
+        }
+    </style>
+</head>
+<body>
+<div id="starfield"></div>
+<div id="gamecontainer">
+    <canvas id="gameCanvas" width="850"></canvas>
+</div>
+<div id="info">
+        <span><a id="muteLink" href="#" onclick="toggleMute()">TOGGLE SOUND</a></span>
+</div>
+<div class="webcam-container flex-row">
+    <div class="controller-panels" id="controller">
+
+        <div class="panel training-panel">
+
+            <!-- Big buttons. -->
+            <div class="panel-row big-buttons">
+                <button id="train">
+                    <img width="66" height="66" src="../static/spaceinvaders/images/button.svg"/>
+                    <span id="train-status">TRAIN/LOAD MODEL</span>
+                </button>
+                <button id="predict">
+                    <img width="66" height="66" src="../static/spaceinvaders/images/button.svg"/>
+                    <span>PLAY</span>
+                </button>
+            </div><!-- /.panel-row -->
+
+            <div class="panel-row params-webcam-row">
+                <div id="paramsForm">
+                    <label>Learning rate</label>
+                    <select id="inpLearningRate">
+                        <option value="0.00001">0.00001</option>
+                        <option selected value="0.0001">0.0001</option>
+                        <option value="0.001">0.001</option>
+                        <option value="0.003">0.003</option>
+                    </select>
+
+                    <label>Batch size</label>
+                    <select id="inpBatchSize">
+                        <option value="0.05">0.05</option>
+                        <option value="0.1">0.1</option>
+                        <option selected value="0.4">0.4</option>
+                        <option value="1">1</option>
+                    </select>
+
+                    <label>Epochs</label>
+                    <select id="inpEpochs">
+                        <option value="10">10</option>
+                        <option selected value="20">20</option>
+                        <option value="40">40</option>
+                    </select>
+
+                    <label>Hidden Units</label>
+                    <select id="inpHiddenUnits">
+                        <option value="10">10</option>
+                        <option selected value="100">100</option>
+                        <option value="200">200</option>
+                    </select>
+
+                    <label>Threshold: <span id="thresholdMonitor">95%</span></label>
+                    <input type="range" mix="50" value="95" max="99" step="1" id="inferenceThreshold">
+                </div>
+                <div class="webcam-box-outer">
+                    <div class="webcam-box-inner">
+                        <video autoplay playsinline muted id="webcam" width="224" height="224"></video>
+                    </div>
+                </div>
+
+            </div><!-- /.panel-row -->
+
+        </div><!-- /.panel -->
+
+        <div class="panel joystick-panel">
+
+            <div class="panel-row panel-row-top">
+
+                <div class="panel-cell panel-cell-left panel-cell-fill" style="width: 100%">
+                    <span id="probabilityMonitor"></span>
+                </div><!-- ./panel-cell -->
+
+                <div class="panel-cell panel-cell-center">
+                </div><!-- ./panel-cell -->
+
+                <div class="panel-cell panel-cell-right panel-cell-fill">
+                </div><!-- ./panel-cell -->
+
+            </div><!-- /.panel-row -->
+
+            <div class="panel-row panel-row-middle">
+                <div class="panel-cell panel-cell-left">
+                    <div class="thumb-box">
+                        <div class="thumb-box-outer">
+                            <div class="thumb-box-inner">
+                                <canvas class="thumb" width=224 height=224 id="left-thumb"></canvas>
+                            </div>
+                            <button class="record-button" id="left" value="4"><span>Add Sample</span></button>
+                        </div>
+                        <p>
+                            <span id="left-total" class="total">0</span> examples
+                        </p>
+                    </div>
+                </div><!-- ./panel-cell -->
+
+                <div class="panel-cell panel-cell-center panel-cell-fill">
+                    <img height="108" width="129" src="../static/spaceinvaders/images/joystick.png"/>
+                </div><!-- ./panel-cell -->
+
+                <div class="panel-cell panel-cell-right">
+                    <div class="thumb-box">
+                        <div class="thumb-box-outer">
+                            <div class="thumb-box-inner">
+                                <canvas class="thumb" width=224 height=224 id="right-thumb"></canvas>
+                            </div>
+                            <button class="record-button" id="right" value="6"><span>Add Sample</span></button>
+                        </div>
+                        <p>
+                            <span id="right-total" class="total">0</span> examples
+                        </p>
+                    </div>
+                </div><!-- ./panel-cell -->
+
+            </div><!-- /.panel-row -->
+
+            <div class="panel-row panel-row-bottom">
+
+                <div class="panel-cell panel-cell-left panel-cell-fill">
+                </div><!-- ./panel-cell -->
+
+                <div class="panel-cell panel-cell-center">
+                </div><!-- ./panel-cell -->
+
+                <div class="panel-cell panel-cell-right panel-cell-fill">
+                </div><!-- ./panel-cell -->
+
+            </div><!-- /.panel-row -->
+
+
+        </div><!-- /.panel -->
+
+    </div>
+</div>
+
+
+<script src='{{ url_for('static', filename='spaceinvaders/js/starfield.js') }}'></script>
+<script src='{{ url_for('static', filename='spaceinvaders/js/spaceinvaders.js') }}'></script>
+<script>
+
+    //  Create the starfield.
+    var container = document.getElementById('starfield');
+    var starfield = new Starfield();
+    starfield.initialise(container);
+    starfield.start();
+
+    //  Setup the canvas.
+    var canvas = document.getElementById("gameCanvas");
+    canvas.width = 850;
+    canvas.height = 600 / 2;
+
+    //  Create the game.
+    var game = new Game();
+
+    //  Initialise it with the game canvas.
+    game.initialise(canvas);
+
+    //  Start the game.
+    game.start();
+
+    //  Listen for keyboard events.
+    window.addEventListener("keydown", function keydown(e) {
+        var keycode = e.which || window.event.keycode;
+        //  Supress further processing of left/right/space (37/29/32)
+        if (keycode == 37 || keycode == 39 || keycode == 32) {
+            e.preventDefault();
+        }
+        if (keycode == 37) {
+            game.moveToTheLeft();
+        }
+        if (keycode == 39) {
+            game.moveToTheRight();
+        }
+        {#game.keyDown(keycode);#}
+    });
+    window.addEventListener("keyup", function keydown(e) {
+        var keycode = e.which || window.event.keycode;
+        game.keyUp(keycode);
+    });
+
+    document.querySelector('#predict').addEventListener('click', function (e) {
+        document.querySelector('#train').style.opacity = '0.3';
+        document.querySelector('#train').disabled = true;
+        game.StartGame();
+    });
+
+    function toggleMute() {
+        game.mute();
+    }
+
+    game.mute();
+</script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@0.11.2"></script>
+<script src='/static/tensorflow/js/model-operator.js'></script>
+<script src='/static/spaceinvaders/js/cam-space-invaders.js'></script>
+</body>
+</html>
