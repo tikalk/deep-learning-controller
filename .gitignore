@@ -112,6 +112,5 @@ venv.bak/
 .DS_Store
 
 # Data
-images
 data
 
